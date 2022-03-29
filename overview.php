@@ -120,7 +120,10 @@ foreach ($allgroupings as $rec) {
     $groupoptions["g{$rec->id}"] = format_string($rec->name);
 }
 if (!$groupids) {
-    $group = 0;
+    $group = array_keys($groupoptions)[0];
+    if ($group) {
+        $groupids = [$group];
+    }
     $PAGE->set_url($PAGE->url, ['group' => $group]);
 }
 
