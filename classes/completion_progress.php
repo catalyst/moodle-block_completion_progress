@@ -373,7 +373,7 @@ class completion_progress implements \renderable {
 
         $completecount = 0;
         foreach ($completions as $complete) {
-            if ($complete == COMPLETION_COMPLETE || $complete == COMPLETION_COMPLETE_PASS) {
+            if ($complete != COMPLETION_INCOMPLETE) {
                 $completecount++;
             }
         }
