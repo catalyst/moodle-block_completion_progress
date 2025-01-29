@@ -679,3 +679,15 @@ function block_completion_progress_group_membership ($group, $courseid, $userid)
 
     return false;
 }
+
+/**
+ * Used to get permitted course creator capabilities for testing
+ *
+ * @return array
+ */
+function block_completion_progress_get_permitted_course_creator_caps_for_testing() {
+    return array (
+        'block/completion_progress:overview',
+        'block/completion_progress:addinstance'
+    );
+}

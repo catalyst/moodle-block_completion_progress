@@ -224,7 +224,7 @@ if (!$paged) {
 }
 
 // Form for messaging selected participants.
-$formattributes = array('action' => $CFG->wwwroot.'/user/action_redir.php', 'method' => 'post', 'id' => 'participantsform');
+$formattributes = array('action' => $CFG->wwwroot.'/user/action_redir.php', 'method' => 'post', 'id' => 'studentsform');
 echo html_writer::start_tag('form', $formattributes);
 echo html_writer::empty_tag('input', array('type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()));
 echo html_writer::empty_tag('input', array('type' => 'hidden', 'name' => 'returnto', 'value' => s($PAGE->url->out(false))));
@@ -360,38 +360,29 @@ if ($numberofusers > 0) {
 $table->print_html();
 
 if ($bulkoperations) {
+    $buttonclasses = 'btn btn-secondary';
     echo '<br /><div class="buttons">';
 
     echo html_writer::start_tag('div', array('class' => 'btn-group'));
-    echo html_writer::tag('input', "", array('type' => 'button', 'id' => 'checkallonpage', 'class' => 'btn btn-secondary',
-    'value' => get_string('selectall')));
-    echo html_writer::tag('input', "", array('type' => 'button', 'id' => 'checknone', 'class' => 'btn btn-secondary',
-        'value' => get_string('deselectall')));
+    echo '<input type="button" id="checkall" value="'.get_string('selectall').'" class="'. $buttonclasses .'"> '."\n";
+    echo '<input type="button" id="checknone" value="'.get_string('deselectall').'" class="'. $buttonclasses .'"> '."\n";
     echo html_writer::end_tag('div');
     $displaylist = array();
     if ($messagingallowed) {
-        $displaylist['#messageselect'] = get_string('messageselectadd');
-    }
-    if ($notesallowed) {
-        $displaylist['#addgroupnote'] = get_string('addnewnote', 'notes');
+        $displaylist['messageselect.php'] = get_string('messageselectadd');
     }
 
     echo html_writer::tag('label', get_string("withselectedusers"), array('for' => 'formactionid'));
-    echo html_writer::select($displaylist, 'formaction', '', array('' => 'choosedots'), array('id' => 'formactionid'));
+    echo html_writer::select($displaylist, 'formaction', '', array('' => 'choosedots'), array('id' => 'formactionselect'));
 
     echo '<input type="hidden" name="id" value="'.$course->id.'" />';
-    echo '<noscript style="display:inline">';
-    echo '<div><input type="submit" value="'.get_string('ok').'" /></div>';
-    echo '</noscript>';
+    echo '<input type="submit" value="'.get_string('ok').'" />';
     echo '</div>';
+    
 
-    $options = new stdClass();
-    $options->courseid = $course->id;
-    $options->noteStateNames = note_get_state_names();
-    $options->stateHelpIcon = $OUTPUT->help_icon('publishstate', 'notes');
-    $PAGE->requires->js_call_amd('core_user/participants', 'init', [$options]);
 }
 echo html_writer::end_tag('form');
+$PAGE->requires->js_init_call('M.report_participation.init');
 
 // Output paging controls.
 $perpageurl = clone($PAGE->url);
