@@ -23,7 +23,6 @@
     {
         "novisibleactivities": false,
         "simple": false,
-        "courseid": 1,
         "instanceid": 1,
         "userid": 99,
         "cellsperrow": 4,
@@ -35,7 +34,7 @@
         "cells": [
             {
                 "activityid": 349,
-                "haslink": "not-allowed",
+                "haslink": "true",
                 "firstnow": true,
                 "firsthalfnow": false,
                 "lasthalfnow": false,
@@ -63,7 +62,7 @@
 {{/novisibleactivities}}
 {{^novisibleactivities}}
     <div class="block_completion_progress">
-        <div class="barContainer" data-courseid="{{courseid}}" data-instanceid="{{instanceid}}" data-userid="{{userid}}">
+        <div class="barContainer" data-instanceid="{{instanceid}}" data-userid="{{userid}}">
             {{#barscroll}}
                 <svg class="left-arrow-svg" height="30" width="30"><polygon points="30,0 0,15 30,30" class="triangle-polygon"></svg>
                 <svg class="right-arrow-svg" height="30" width="30"><polygon points="0,0 30,15 0,30" class="triangle-polygon"></svg>

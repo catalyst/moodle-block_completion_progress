@@ -177,7 +177,7 @@ class completion_progress implements \renderable, \templatable {
      * Specialise for overview page use.
      * @return self
      */
-    public function for_overview(): self {
+    public function for_overview() {
         if ($this->user) {
             throw new coding_exception('cannot re-specialise for overview');
         }
@@ -208,8 +208,6 @@ class completion_progress implements \renderable, \templatable {
             call_user_func($progresscallback, 0);
         }
 
-        $clock = \core\di::get(\core\clock::class);
-
         $numdone = 0;
         $numcompletions = count($this->completions);
         $cachetime = get_config('block_completion_progress', 'overviewcachetime') ?: defaults::OVERVIEWCACHETIME;
@@ -221,7 +219,7 @@ class completion_progress implements \renderable, \templatable {
             ];
             $rec = $DB->get_record('block_completion_progress', $rec) ?: (object)$rec;
 
-            if (!empty($rec->timemodified) && $clock->time() - $rec->timemodified < $cachetime) {
+            if (!empty($rec->timemodified) && time() - $rec->timemodified < $cachetime) {
                 $trans->allow_commit();
                 continue;
             }
@@ -245,7 +243,7 @@ class completion_progress implements \renderable, \templatable {
                     $rec->percentage = (int)round(100 * $completecount / count($this->visibleactivities));
                 }
             }
-            $rec->timemodified = $clock->time();
+            $rec->timemodified = time();
 
             if (empty($rec->id)) {
                 $rec->id = $DB->insert_record('block_completion_progress', $rec);
@@ -551,28 +549,35 @@ class completion_progress implements \renderable, \templatable {
      * Filter down the activities to those a user can see.
      */
     protected function filter_visible_activities() {
+        global $CFG, $USER;
+
         if (!$this->user || $this->activities === null) {
             return;
         }
 
         $this->visibleactivities = [];
         $modinfo = get_fast_modinfo($this->course, $this->user->id);
+        $canviewhidden = has_capability('moodle/course:viewhiddenactivities', $this->context, $this->user);
 
         // Keep only activities that are visible.
         foreach ($this->activities as $key => $activity) {
             $cm = $modinfo->cms[$activity->id];
-            $section = $cm->get_section_info();
 
-            if (!$section->uservisible) {
+            // Check visibility in course.
+            if (!$cm->visible && !$canviewhidden) {
                 continue;
-            } else if (!$cm->uservisible) {
-                if (!!$cm->availableinfo) {
-                    $activity->available = false;
+            }
+
+            // Check availability, allowing for visible, but not accessible items.
+            if (!empty($CFG->enableavailability)) {
+                if ($canviewhidden) {
+                    $activity->available = true;
                 } else {
-                    continue;
+                    if (isset($cm->available) && !$cm->available && empty($cm->availableinfo)) {
+                        continue;
+                    }
+                    $activity->available = $cm->available;
                 }
-            } else {
-                $activity->available = true;
             }
 
             // Check for exclusions.
@@ -580,7 +585,7 @@ class completion_progress implements \renderable, \templatable {
                 continue;
             }
 
-            // Save the visible activity.
+            // Save the visible event.
             $this->visibleactivities[$key] = $activity;
         }
     }
@@ -843,8 +848,7 @@ class completion_progress implements \renderable, \templatable {
 
         $data = new stdClass();
 
-        $clock = \core\di::get(\core\clock::class);
-        $now = $clock->time();
+        $now = time();
         $activities = $this->get_visible_activities();
         $completions = $this->get_completions();
         $config = $this->get_block_config();
@@ -883,10 +887,10 @@ class completion_progress implements \renderable, \templatable {
             ],
         ];
 
-        $data->courseid = $courseid;
         $data->instanceid = $instance;
         $data->userid = $userid;
         $data->simple = $simple;
+        $data->numactivities = $numactivities;
         $data->useicons = $useicons;
 
         if ($simple && $numactivities == 0) {
@@ -985,7 +989,7 @@ class completion_progress implements \renderable, \templatable {
                 }
             }
 
-            $cell->activityicon = $activity->icon->out(false);
+            $cell->activityicon = $activity->icon;
             $cell->activityname = $activity->name;
             if (!empty($activity->link) && (!empty($activity->available) || $simple)) {
                 $cell->activitylink = $activity->link;
